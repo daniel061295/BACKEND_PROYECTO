@@ -10,3 +10,6 @@ class GetMedicionBetweenRangeSerializer(serializers.Serializer):
     id_nodo = serializers.IntegerField()
     fecha_inicio = serializers.DateTimeField()
     fecha_fin = serializers.DateTimeField()
+
+class GetLast(serializers.Serializer):
+    id_nodo = serializers.IntegerField()

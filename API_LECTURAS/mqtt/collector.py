@@ -20,8 +20,6 @@ import json
 # from ..api.models import Mediciones as Medidas
 from datetime import datetime
 
-
-
 # conn = mysql.connector.connect(host="127.0.0.1",user="root",passwd="Manzana2132881+",database="proyecto")
 topic = 'SHM_PROYECTO/#'
 

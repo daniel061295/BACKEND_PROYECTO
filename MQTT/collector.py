@@ -46,7 +46,7 @@ def upload_message (data):
                     "id_sensor" : 1
 
                 }
-                response = requests.post(url="http://localhost:8000/api/withvalidations/", data = body)
+                response = requests.post(url="http://localhost:8000/data_collector/withvalidations/", data = body)
                 if (response.status_code == 400):
                     print(response.text)
                     # time.sleep(0.5)

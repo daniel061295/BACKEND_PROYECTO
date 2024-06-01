@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from .models import Mediciones
-from .serializers import MedicionesSerializer, GetMedicionBetweenRangeSerializer
+from .serializers import MedicionesSerializer, GetMedicionBetweenRangeSerializer, GetLast
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -36,9 +36,9 @@ def post_medicion_with_validations(request):
             return Response({"detail":"NO PASO VALIDACIONES",
                              "errors":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 #
-@api_view(['GET'])
+@api_view(['POST'])
 def get_medicion_between_range(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
         serializer = GetMedicionBetweenRangeSerializer(data=request.data)
         if serializer.is_valid():
             nodo = serializer.validated_data["id_nodo"]
@@ -47,11 +47,35 @@ def get_medicion_between_range(request):
 
             records = Mediciones.objects.filter(id_nodo=nodo,date_time__gte=fecha_inicio, date_time__lte=fecha_fin)
             response = serializers.serialize('json', records)
+
             response = json.loads(response)
+
             if not response:
                 return Response({"detail":f"NO SE ENCONTRARON MEDICIONES PARA EL NODO {nodo} ENTRE {fecha_inicio} Y {fecha_fin}"}, status=status.HTTP_400_BAD_REQUEST)
             else:
+                response = [response[i]["fields"] for i in range(len(response))]
                 return Response(response,status=status.HTTP_200_OK)
+        else:
+            print(request.data)
+            return Response({"detail": "NO PASO VALIDACIONES",
+                             "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+def get_last(request):
+    if request.method == 'POST':
+        serializer = GetLast(data=request.data)
+        if serializer.is_valid():
+            nodo = serializer.validated_data["id_nodo"]
+            records = Mediciones.objects.filter(id_nodo=nodo).last()
+            response = serializers.serialize('json', [records])
+            response = json.loads(response)
+
+            if not response:
+                return Response(
+                    {"detail": f"NO SE ENCONTRARON MEDICIONES PARA EL NODO {nodo} "},
+                    status=status.HTTP_400_BAD_REQUEST)
+            else:
+                response = [response[i]["fields"] for i in range(len(response))]
+                return Response(response, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "NO PASO VALIDACIONES",
                              "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
