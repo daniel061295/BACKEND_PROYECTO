@@ -51,7 +51,7 @@ def get_medicion_between_range(request):
             response = json.loads(response)
 
             if not response:
-                return Response({"detail":f"NO SE ENCONTRARON MEDICIONES PARA EL NODO {nodo} ENTRE {fecha_inicio} Y {fecha_fin}"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response([], status=status.HTTP_200_OK)
             else:
                 response = [response[i]["fields"] for i in range(len(response))]
                 return Response(response,status=status.HTTP_200_OK)
@@ -70,9 +70,10 @@ def get_last(request):
             response = json.loads(response)
 
             if not response:
-                return Response(
-                    {"detail": f"NO SE ENCONTRARON MEDICIONES PARA EL NODO {nodo} "},
-                    status=status.HTTP_400_BAD_REQUEST)
+                #return Response(
+                 #   {"detail": f"NO SE ENCONTRARON MEDICIONES PARA EL NODO {nodo} "},
+                 #   status=status.HTTP_400_BAD_REQUEST)
+                return Response([], status=status.HTTP_200_OK)
             else:
                 response = [response[i]["fields"] for i in range(len(response))]
                 return Response(response, status=status.HTTP_200_OK)
