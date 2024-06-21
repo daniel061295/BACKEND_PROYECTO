@@ -54,6 +54,8 @@ def get_medicion_between_range(request):
                 return Response([], status=status.HTTP_200_OK)
             else:
                 response = [response[i]["fields"] for i in range(len(response))]
+                if len(response)>48:
+                    response = response[-48:]
                 return Response(response,status=status.HTTP_200_OK)
         else:
             print(request.data)

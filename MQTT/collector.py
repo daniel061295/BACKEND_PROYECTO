@@ -39,7 +39,7 @@ def upload_message (data):
                 humedad = float(element["humedad"])
 
                 body = {
-                    "date_time" : datetime.strptime(fechahora, '%Y-%m-%d %H:%M:%S.%f'),
+                    "date_time" : datetime.strptime(fechahora, '%Y-%m-%d %H:%M:%S'),
                     "id_nodo" : nodo,
                     "temperatura" : temperatura,
                     "humedad" : humedad,
