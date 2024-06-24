@@ -31,21 +31,21 @@ def upload_message (data):
     if data:
         for element in data:
 
-            print(element)
+
             try:
                 fechahora = str(element["fecha"])
                 nodo = int(element["nodo"])
                 temperatura = float(element["temperatura"])
                 humedad = float(element["humedad"])
-
                 body = {
                     "date_time" : datetime.strptime(fechahora, '%Y-%m-%d %H:%M:%S'),
                     "id_nodo" : nodo,
-                    "temperatura" : temperatura,
-                    "humedad" : humedad,
+                    "temperatura" : round(temperatura,2),
+                    "humedad" : round(humedad,2),
                     "id_sensor" : 1
 
                 }
+                print(body)
                 response = requests.post(url="http://localhost:8000/data_collector/withvalidations/", data = body)
                 if (response.status_code == 400):
                     print(response.text)

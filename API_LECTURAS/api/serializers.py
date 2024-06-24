@@ -19,3 +19,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id','username','email','password']
+
+class DownloadCsvSerializer(serializers.Serializer):
+    id_nodo = serializers.IntegerField()
+    fecha_inicio = serializers.DateTimeField()
+    fecha_fin = serializers.DateTimeField()

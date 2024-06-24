@@ -1,7 +1,7 @@
 from .models import Mediciones
-from .serializers import MedicionesSerializer, GetMedicionBetweenRangeSerializer, GetLast, UserSerializer
+from .serializers import MedicionesSerializer, GetMedicionBetweenRangeSerializer, GetLast, UserSerializer, DownloadCsvSerializer
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view , authentication_classes, permission_classes
+from rest_framework.decorators import api_view , authentication_classes, permission_classes, action
 from rest_framework.response import Response
 from django.core import serializers
 from django.shortcuts import get_object_or_404
@@ -10,7 +10,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 import json
-
+from django.http import HttpResponse
+import csv
+from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
 
 
 class MedicionesViewSet(viewsets.ModelViewSet):
@@ -53,14 +56,23 @@ def get_medicion_between_range(request):
             response = serializers.serialize('json', records)
 
             response = json.loads(response)
-
             if not response:
                 return Response([], status=status.HTTP_200_OK)
             else:
-                response = [response[i]["fields"] for i in range(len(response))]
-                if len(response)>48:
-                    response = response[-48:]
-                return Response(response,status=status.HTTP_200_OK)
+                respuesta = []
+                for medida in response:
+                    meta_data = medida["fields"]
+                    medida_dict = {}
+                    fecha_ = meta_data["date_time"].split(':')
+                    medida_dict["date_time"] = fecha_[0] + ":" + fecha_[1]
+                    medida_dict["temperatura"] = meta_data["temperatura"]
+                    medida_dict["humedad"] = meta_data["humedad"]
+                    respuesta.append(medida_dict)
+
+                if len(respuesta)>48:
+                    respuesta = respuesta[-48:]
+                print(respuesta)
+                return Response(respuesta,status=status.HTTP_200_OK)
         else:
             print(request.data)
             return Response({"detail": "NO PASO VALIDACIONES",
@@ -72,7 +84,9 @@ def get_last(request):
         if serializer.is_valid():
             nodo = serializer.validated_data["id_nodo"]
             records = Mediciones.objects.filter(id_nodo=nodo).last()
+
             response = serializers.serialize('json', [records])
+
             response = json.loads(response)
 
             if not response:
@@ -82,6 +96,9 @@ def get_last(request):
                 return Response([], status=status.HTTP_200_OK)
             else:
                 response = [response[i]["fields"] for i in range(len(response))]
+                fecha_ = response[0]["date_time"].split(':')
+                response[0]["date_time"] = fecha_[0]+":"+fecha_[1]
+                # print(response[0]["date_time"])
                 return Response(response, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "NO PASO VALIDACIONES",
@@ -108,3 +125,36 @@ def register(request):
         token = Token.objects.create(user=user)
         return Response({'token':token.key, 'user':serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+# @csrf_exempt
+# @action(detail=False, methods=['post'])
+@api_view(['POST'])
+def download_csv(request):
+    if not(request.method )== 'POST':
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    serializer = DownloadCsvSerializer(data=request.data)
+    if not(serializer.is_valid()):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    nodo = serializer.validated_data["id_nodo"]
+    fecha_inicio = serializer.validated_data["fecha_inicio"]
+    fecha_fin = serializer.validated_data["fecha_fin"]
+
+    records = Mediciones.objects.filter(id_nodo=nodo, date_time__gte=fecha_inicio, date_time__lte=fecha_fin)
+    data = serializers.serialize('json', records)
+    data = json.loads(data)
+    if not data:
+        return Response({'details':"No se encontraron datos entre las fechas estipuladas"},status=status.HTTP_400_BAD_REQUEST)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="datos.csv"'
+    writer = csv.DictWriter(response, fieldnames=['Id_nodo', 'Fecha hora', 'Temperatura', 'Humedad'])
+    writer.writeheader()
+    for i in data:
+        meta_data = i["fields"]
+        detail_dict = {}
+        detail_dict["Id_nodo"] = meta_data["id_nodo"]
+        detail_dict["Fecha hora"] = meta_data["date_time"]
+        detail_dict["Temperatura"] = meta_data["temperatura"]
+        detail_dict["Humedad"] = meta_data["humedad"]
+        writer.writerow(detail_dict)
+    return response

@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from django.urls import path, re_path
+from django.views.decorators.csrf import csrf_exempt
 
 router = DefaultRouter()
 router.register(r'mediciones',views.MedicionesViewSet )
@@ -14,5 +15,5 @@ urlpatterns = [
     path(r"getlast/",views.get_last),
     re_path("login", views.login, name="login"),
     re_path("register", views.register, name="register"),
-    re_path("profile", views.profile, name="profile")
+    re_path("downloadcsv", views.download_csv, name="download_csv")
 ]
